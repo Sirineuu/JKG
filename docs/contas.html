@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+
+    <title>JKG - Contas Finance</title>
+  </head>
+
+  <body>
+    <header class="header">
+      <div class="logo">
+        <a href="index.html"
+          ><img src="imgs/Logo.jpg" alt="Logo do JKG - Gestão Financeira"
+        /></a>
+      </div>
+      <nav aria-label="Navegação principal" class="nav">
+        <button class="hamburger"></button>
+        <ul class="nav-list">
+          <li><a href="index.html">Início</a></li>
+          <li><a href="#">Sobre Nós</a></li>
+          <li><a href="#">Contato</a></li>
+          <li><a href="#">Usuário</a></li>
+        </ul>
+      </nav>
+    </header>
+
+    <div id="painel">
+      <div class="box box1">
+        <div class="flex-card">
+          <h2>Entradas</h2>
+          <img class="icon" src="imgs/arrow.png" alt="" />
+        </div>
+        <h3>R$ 3.450,00</h3>
+      </div>
+      <div class="box box2">
+        <div class="flex-card">
+          <h2>Saidas</h2>
+          <img class="icon" src="imgs/arrowred.png" alt="" />
+        </div>
+        <h3>R$ 935,70</h3>
+      </div>
+      <div class="box box3">
+        <div class="flex-card">
+          <h2>Total</h2>
+          <img class="icon" src="imgs/cifrao.png" alt="" />
+        </div>
+        <h3>R$ 2.514,30</h3>
+      </div>
+    </div>
+    <div id="contas">
+      <button id="novos">Novos lançamentos</button>
+    </div>
+
+    <div id="moldura" class="modal">
+      <div id="lancamentos" class="modal-content">
+        <span class="close">&times;</span>
+        <img src="imgs/JKG.jpeg" alt="" />
+        <h1>Novos Lançamento</h1>
+
+        <div class="espaco_div">
+          <label for="titulo">Título</label>
+          <input type="text" id="titulo" />
+        </div>
+
+        <div class="espaco_div">
+          <label for="categoria">Categoria:</label>
+          <select id="categoria" name="categoria">
+            <option value="Alimentacão">Alimentação</option>
+            <option value="Transporte">Transporte</option>
+            <option value="Saude">Saúde</option>
+            <option value="Lazer">Lazer</option>
+            <option value="Educacão">Educação</option>
+          </select>
+        </div>
+
+        <div class="espaco_div">
+          <label for="valor">Valor</label>
+          <input type="text" id="valor" />
+        </div>
+
+        <div class="espaco_div">
+          <label for="data">Data</label>
+          <input type="date" id="data" />
+        </div>
+
+        <div class="button_lancamento">
+          <button
+            class="submit lançar"
+            onclick="window.location.href='contas.html';"
+          >
+            Voltar
+          </button>
+          <button class="lançar" id="cadastrar">Cadastrar</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="content">
+        <table class="rTable">
+            <thead>
+              <tr>
+                <th>Título</th>
+                <th>Preço</th>
+                <th>Categoria</th>
+                <th>Data</th>
+                <th>Ações</th> <!-- Coluna de Ações -->
+              </tr>
+            </thead>
+            <tbody id="tabela-corpo"></tbody>
+          </table>
+    </div>
+    <footer>
+      <div class="footer-links">
+        <a href="#">Redes Sociais</a>
+        <a href="#">Política de Privacidade</a>
+        <a href="#">Ajuda e Suporte</a>
+        <a href="#">Termos de Serviço</a>
+      </div>
+      <p class="foter">
+        &copy; 2024 JKG - Gestão Financeira. Todos os direitos reservados.
+      </p>
+      <p class="foter2">
+        Desenvolvido por: João Jesus, Gabriel Estevo, Henrique Mendes, Brenno
+        Moises e Da Silva.
+      </p>
+    </footer>
+  </body>
+  <script>
+    // Função para carregar os lançamentos na tabela
+    async function carregarLancamentos() {
+      // Faz a requisição para obter os lançamentos cadastrados no banco de dados
+      const response = await fetch("http://localhost:3000/lancamentos");
+      const lancamentos = await response.json();
+
+      const tableBody = document.getElementById("tabela-corpo");
+      tableBody.innerHTML = ""; // Limpa a tabela antes de adicionar os novos lançamentos
+
+      // Preenche a tabela com os lançamentos
+      lancamentos.forEach((lancamento) => {
+        const newRow = document.createElement("tr");
+        newRow.innerHTML = `
+                <td>${lancamento.titulo}</td>
+                <td>R$ ${lancamento.valor}</td>
+                <td>${lancamento.categoria}</td>
+                <td>${lancamento.data}</td>
+                <td>
+                    <button onclick="editarLancamento('${lancamento._id}')">Editar</button>
+                    <button onclick="excluirLancamento('${lancamento._id}')">Excluir</button>
+                </td>
+            `;
+        tableBody.appendChild(newRow);
+      });
+    }
+    //editar 
+    async function editarLancamento(id) {
+      if (!id) {
+        console.error("ID do lançamento não foi fornecido");
+        return;
+      }
+
+      try {
+        const response = await fetch(`http://localhost:3000/lancamentos/${id}`);
+        const lancamento = await response.json();
+        console.log(lancamento)
+        // Exibe os dados no modal para edição
+        document.getElementById("titulo").value = lancamento.titulo;
+        document.getElementById("categoria").value = lancamento.categoria;
+        document.getElementById("valor").value = lancamento.valor;
+        document.getElementById("data").value = lancamento.data;
+
+        // Exibe o modal
+        document.getElementById("moldura").style.display = "block";
+
+        // Atualiza o ID atual no botão de salvar (para posterior PUT)
+        document.getElementById("cadastrar").dataset.id = id;
+      } catch (error) {
+        console.error("Erro ao carregar lançamento para edição:", error);
+      }
+    }
+
+    // Função para excluir um lançamento
+    async function excluirLancamento(id) {
+    if (!id) {
+      console.error('ID do lançamento não foi fornecido');
+      return;
+    }
+    console.log(id);
+
+    const confirmacao = confirm('Tem certeza que deseja excluir este lançamento?');
+    if (!confirmacao) return;
+
+    try {
+      const response = await fetch(`http://localhost:3000/lancamentos/${id}`, {
+        method: 'DELETE',
+      });
+
+      const resultado = await response.json();
+      if (resultado.message === 'Lançamento excluído com sucesso!') {
+        alert('Lançamento excluído com sucesso!');
+        await carregarLancamentos(); // Atualiza a tabela
+      } else {
+        console.error('Erro ao excluir lançamento:', resultado.message);
+      }
+    } catch (error) {
+      console.error('Erro ao excluir lançamento:', error);
+    }
+  }
+
+
+
+
+
+    // Carregar os lancamentos na tabela
+    document.addEventListener("DOMContentLoaded", async function () {
+      // Carrega os lançamentos na tabela ao carregar a página
+      await carregarLancamentos();
+
+      // Abertura do modal
+      document.getElementById("novos").addEventListener("click", function () {
+        document.getElementById("moldura").style.display = "block"; // Abre o modal
+      });
+
+      // Fechamento do modal
+      document.querySelector(".close").addEventListener("click", function () {
+        document.getElementById("moldura").style.display = "none"; // Fecha o modal
+      });
+
+      // Evento de cadastro
+      document
+        .getElementById("cadastrar")
+        .addEventListener("click", async function () {
+          const titulo = document.getElementById("titulo").value.trim();
+          const categoria = document.getElementById("categoria").value.trim();
+          const valor = document.getElementById("valor").value.trim();
+          const data = document.getElementById("data").value.trim();
+
+          // Log para ver os dados
+          console.log({ titulo, categoria, valor, data });
+
+          // Verifica se todos os campos foram preenchidos
+          if (!titulo || !categoria || !valor || !data) {
+            alert("Todos os campos devem ser preenchidos!");
+            return;
+          }
+
+          // Verifica se o valor é um número válido
+          const valorNum = parseFloat(valor.replace(",", "."));
+          if (isNaN(valorNum)) {
+            alert("Por favor, insira um valor válido!");
+            return;
+          }
+
+          // Envia os dados para o servidor
+          const response = await fetch(
+            "http://localhost:3000/cadastrar/contas",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                titulo,
+                categoria,
+                valor: valorNum,
+                data,
+              }),
+            }
+          );
+
+          const result = await response.json();
+          console.log(result); // Adicionando log para ver a resposta do servidor
+
+          if (result.message === "Lançamento cadastrado com sucesso!") {
+            // Atualiza a tabela com os novos dados
+            await carregarLancamentos(); // Carrega os dados mais recentes da tabela
+
+            // Fecha o modal
+            document.getElementById("moldura").style.display = "none";
+          } else {
+            alert("Erro ao cadastrar lançamento");
+          }
+        });
+    });
+  </script>
+</html>
